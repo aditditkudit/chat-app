@@ -41,22 +41,30 @@ io.on('connection', function(socket){
     });
 
     socket.on('send_message', function(data){
-        group_id = (data.user_id > data.other_user_id)?data.user_id+data.other_user_id:data.other_user_id+data.user_id;
+        var group_id = (data.user_id > data.other_user_id)?data.user_id+data.other_user_id:data.other_user_id+data.user_id;
         var time = moment().format("h:mm A");
 
         data.time = time;
-        for(var index in sockets[data.user_id]){
-            sockets[data.user_id][index].emit('receive_message', data);
-        }
-        for(var index in sockets[data.other_user_id]){
-            sockets[data.other_user_id][index].emit('receive_message', data);
-        }
         con.query(`INSERT INTO chats (user_id, other_user_id, message, group_id) values (${data.user_id}, ${data.other_user_id}, '${data.message}', ${group_id})`, function(err,res){
             if(err)
                 throw err;
-            console.log("Message Sent");
+            data.id = res.insertId
+            for(var index in sockets[data.user_id]){
+                sockets[data.user_id][index].emit('receive_message', data);
+            }
+            for(var index in sockets[data.other_user_id]){
+                sockets[data.other_user_id][index].emit('receive_message', data);
+            }
         })
     });
+
+    socket.on('read_message', function(id){
+        con.query(`UPDATE chats set is_read = 1 where id=${id}`, function(err,res){
+            if(err)
+                throw err
+            console.log("Message Read");
+        })
+    })
     
     socket.on('disconnect', function(err){
         socket.broadcast.emit('user_disconnected', socket.handshake.query.user_id);
