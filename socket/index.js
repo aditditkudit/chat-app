@@ -52,9 +52,15 @@ io.on('connection', function(socket){
             for(var index in sockets[data.user_id]){
                 sockets[data.user_id][index].emit('receive_message', data);
             }
-            for(var index in sockets[data.other_user_id]){
-                sockets[data.other_user_id][index].emit('receive_message', data);
-            }
+            con.query(`SELECT COUNT(id) as unread_messages from chats where user_id=${data.user_id} and other_user_id = ${data.other_user_id} and is_read = 0`, function(err, res){
+                if(err)
+                    throw err;
+
+                data.unread_messages = res[0].unread_messages;
+                for(var index in sockets[data.other_user_id]){
+                    sockets[data.other_user_id][index].emit('receive_message', data);
+                }
+            })
         })
     });
 

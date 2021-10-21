@@ -10,9 +10,11 @@
                         <div class="col-12 col-lg-5 col-xl-3 border-right">
                             @foreach ($friends as $friend)
                                 <a href="{{route('home', $friend['id'])}}" class="list-group-item list-group-item-action border-0">
-                                    @if($friend['unread_messages']>0)
-                                    <div class="badge bg-success float-right">{{$friend['unread_messages']}}</div>
-                                    @endif
+                                    <div id="unread-count-{{$friend['id']}}">
+                                        @if($friend['unread_messages']>0)
+                                        <div class="badge bg-success float-right">{{$friend['unread_messages']}}</div>
+                                        @endif
+                                    </div>
                                     <div class="d-flex align-items-start">
                                         <img src="https://ui-avatars.com/api/?name={{$friend['name']}}" class="rounded-circle mr-1"
                                             alt="{{$friend['name']}}" width="40" height="40" />
@@ -135,6 +137,7 @@
             });
 
             socket.on('receive_message', function(data){
+                console.log("receive_message", data);
                 if((data.user_id == user_id && data.other_user_id==other_user_id) || (data.user_id ==other_user_id && data.other_user_id == user_id)){
                     if(data.user_id == user_id){
                         var html = `<div class="chat-message-right pb-4">
@@ -168,6 +171,8 @@
                     }
                     $(".chat-messages").append(html);
                     $(".chat-messages").animate({scrollTop:$(".chat-messages").prop("scrollHeight")}, 1000);
+                }else{
+                    $("#unread-count-"+data.user_id).html('<div class="badge bg-success float-right">'+data.unread_messages+'</div>');
                 }
             });
         })
