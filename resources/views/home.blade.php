@@ -43,7 +43,7 @@
                                     </div>
                                     <div class="flex-grow-1 pl-3">
                                         <strong>{{$otherUser->name}}</strong>
-                                        <div class="text-muted small"><em>Typing...</em></div>
+                                        <div class="text-muted small" id="typing-in"><em>Typing...</em></div>
                                     </div>
                                 </div>
                             </div>
@@ -106,6 +106,7 @@
 @section('scripts')
     <script>
         $(function() {
+            var tout;
             var user_id = '{{Auth::id()}}';
             var other_user_id = '{{ ($otherUser) ? $otherUser->id:'' }}';
             var socket = io("http://chat-app.test:3000", {query:{user_id:user_id}});
@@ -137,7 +138,6 @@
             });
 
             socket.on('receive_message', function(data){
-                console.log("receive_message", data);
                 if((data.user_id == user_id && data.other_user_id==other_user_id) || (data.user_id ==other_user_id && data.other_user_id == user_id)){
                     if(data.user_id == user_id){
                         var html = `<div class="chat-message-right pb-4">
@@ -175,6 +175,30 @@
                     $("#unread-count-"+data.user_id).html('<div class="badge bg-success float-right">'+data.unread_messages+'</div>');
                 }
             });
+
+            socket.on('user_typing', function(data){
+                if(data.user_id == other_user_id){
+                    $("#typing-in").html('<en>Typing</en>');
+                    clearTyping();
+                }
+            });
+
+            $("#message-input").on('keyup', function(){
+                socket.emit('user_typing', {user_id:user_id,other_user_id:other_user_id});
+            });
+
+            function clearTyping(){
+                tout = setTimeout(function(){
+                    $("#typing-in").html('');
+                }, 3000)
+            }
+
+            function clearTimet() {
+                clearTimeout(tout);
+            }
+
         })
+
+        
     </script>
 @endsection

@@ -64,6 +64,12 @@ io.on('connection', function(socket){
         })
     });
 
+    socket.on('user_typing', function(data){
+        for(var index in sockets[data.other_user_id]){
+            sockets[data.other_user_id][index].emit('user_typing', data);
+        }
+    })
+
     socket.on('read_message', function(id){
         con.query(`UPDATE chats set is_read = 1 where id=${id}`, function(err,res){
             if(err)
