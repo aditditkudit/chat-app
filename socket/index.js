@@ -32,12 +32,19 @@ io.on('connection', function(socket){
         sockets[socket.handshake.query.user_id] = [];
     }
     sockets[socket.handshake.query.user_id].push(socket)
-    socket.broadcast.emit('user_connected', socket.handshake.query.user_id);
+    // socket.broadcast.emit('user_connected', socket.handshake.query.user_id);
 
     con.query(`UPDATE users SET is_online  = 1 where id=${socket.handshake.query.user_id}`, function(err, res){
         if(err)
             throw err
         console.log("User Connected", socket.handshake.query.user_id);
+        con.query(`SELECT * FROM users where id = ${socket.handshake.query.user_id}`, function(err,res){
+            if(err)
+                throw err;
+            if(res[0]){
+                socket.broadcast.emit('user_connected', res[0]);
+            }
+        })
     });
 
     socket.on('send_message', function(data){

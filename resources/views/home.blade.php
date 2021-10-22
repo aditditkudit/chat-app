@@ -130,7 +130,17 @@
             })
             
             socket.on('user_connected', function(data) {
-                $("#status_"+data).html('<span class="fa fa-circle chat-online"></span> Online');
+                $("#status_"+data.id).html('<span class="fa fa-circle chat-online"></span> Online');
+                Push.create("Hello world!", {
+                    body: `${data.name} is online`,
+                    icon: '/icon.png',
+                    timeout: 4000,
+                    onClick: function () {
+                        window.focus();
+                        this.close();
+                    }
+                });
+
             });
 
             socket.on('user_disconnected', function(data){
